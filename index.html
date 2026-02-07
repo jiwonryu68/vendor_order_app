@@ -743,6 +743,15 @@
             vendor.products[productIdx].quantity++;
             localStorage.setItem('vendors', JSON.stringify(vendors));
             renderVendorsList();
+            // 펼쳐진 상태 유지
+            setTimeout(() => {
+                const content = document.getElementById(`content-${vendorId}`);
+                const icon = document.getElementById(`icon-${vendorId}`);
+                if (content && icon) {
+                    content.classList.add('expanded');
+                    icon.classList.add('expanded');
+                }
+            }, 0);
         }
 
         function decreaseQty(vendorId, productIdx) {
@@ -751,6 +760,15 @@
                 vendor.products[productIdx].quantity--;
                 localStorage.setItem('vendors', JSON.stringify(vendors));
                 renderVendorsList();
+                // 펼쳐진 상태 유지
+                setTimeout(() => {
+                    const content = document.getElementById(`content-${vendorId}`);
+                    const icon = document.getElementById(`icon-${vendorId}`);
+                    if (content && icon) {
+                        content.classList.add('expanded');
+                        icon.classList.add('expanded');
+                    }
+                }, 0);
             }
         }
 
@@ -759,6 +777,15 @@
             vendor.products[productIdx].quantity = Math.max(0, parseInt(value) || 0);
             localStorage.setItem('vendors', JSON.stringify(vendors));
             renderVendorsList();
+            // 펼쳐진 상태 유지
+            setTimeout(() => {
+                const content = document.getElementById(`content-${vendorId}`);
+                const icon = document.getElementById(`icon-${vendorId}`);
+                if (content && icon) {
+                    content.classList.add('expanded');
+                    icon.classList.add('expanded');
+                }
+            }, 0);
         }
 
         // 주문 초기화
@@ -768,6 +795,15 @@
             localStorage.setItem('vendors', JSON.stringify(vendors));
             renderVendorsList();
             showToast('주문이 초기화되었습니다');
+            // 펼쳐진 상태 유지
+            setTimeout(() => {
+                const content = document.getElementById(`content-${vendorId}`);
+                const icon = document.getElementById(`icon-${vendorId}`);
+                if (content && icon) {
+                    content.classList.add('expanded');
+                    icon.classList.add('expanded');
+                }
+            }, 0);
         }
 
         // 주문서 복사
