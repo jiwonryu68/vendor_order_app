@@ -117,9 +117,43 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 0;
             padding-bottom: 15px;
             border-bottom: 2px solid #f0f0f0;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .vendor-header:active {
+            opacity: 0.7;
+        }
+
+        .vendor-header-left {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .collapse-icon {
+            font-size: 20px;
+            transition: transform 0.3s ease;
+            color: #667eea;
+        }
+
+        .collapse-icon.expanded {
+            transform: rotate(90deg);
+        }
+
+        .vendor-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .vendor-content.expanded {
+            max-height: 2000px;
+            margin-top: 15px;
         }
 
         .vendor-name {
@@ -617,39 +651,59 @@
                 
                 return `
                     <div class="vendor-card">
-                        <div class="vendor-header">
-                            <div>
-                                <div class="vendor-name">${vendor.name}</div>
-                                <div class="vendor-info">
-                                    다음 배달: ${formatDate(nextDelivery)}<br>
-                                    주문 마감: ${formatDate(deadline.date)} ${vendor.notificationTime}
+                        <div class="vendor-header" onclick="toggleVendor(${vendor.id})">
+                            <div class="vendor-header-left">
+                                <div class="collapse-icon" id="icon-${vendor.id}">▶</div>
+                                <div>
+                                    <div class="vendor-name">${vendor.name}</div>
+                                    <div class="vendor-info">
+                                        다음 배달: ${formatDate(nextDelivery)}<br>
+                                        주문 마감: ${formatDate(deadline.date)} ${vendor.notificationTime}
+                                    </div>
                                 </div>
                             </div>
                             <div class="deadline-badge ${deadline.safe ? 'safe' : ''}">
                                 ${deadline.daysLeft}일 남음
                             </div>
                         </div>
-                        <div class="product-list">
-                            ${vendor.products.map((product, idx) => `
-                                <div class="product-item">
-                                    <div class="product-name">${product.name}</div>
-                                    <div class="quantity-control">
-                                        <button class="qty-btn" onclick="decreaseQty(${vendor.id}, ${idx})">−</button>
-                                        <input type="number" class="qty-input" value="${product.quantity}" 
-                                               onchange="updateQty(${vendor.id}, ${idx}, this.value)" min="0">
-                                        <button class="qty-btn" onclick="increaseQty(${vendor.id}, ${idx})">+</button>
+                        <div class="vendor-content" id="content-${vendor.id}">
+                            <div class="product-list">
+                                ${vendor.products.map((product, idx) => `
+                                    <div class="product-item">
+                                        <div class="product-name">${product.name}</div>
+                                        <div class="quantity-control">
+                                            <button class="qty-btn" onclick="event.stopPropagation(); decreaseQty(${vendor.id}, ${idx})">−</button>
+                                            <input type="number" class="qty-input" value="${product.quantity}" 
+                                                   onclick="event.stopPropagation()"
+                                                   onchange="updateQty(${vendor.id}, ${idx}, this.value)" min="0">
+                                            <button class="qty-btn" onclick="event.stopPropagation(); increaseQty(${vendor.id}, ${idx})">+</button>
+                                        </div>
                                     </div>
-                                </div>
-                            `).join('')}
+                                `).join('')}
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn btn-secondary" onclick="event.stopPropagation(); resetOrder(${vendor.id})">초기화</button>
+                                <button class="btn btn-primary" onclick="event.stopPropagation(); copyOrder(${vendor.id})">주문서 복사</button>
+                            </div>
+                            <div id="summary-${vendor.id}" class="order-summary" style="display: none;"></div>
                         </div>
-                        <div class="action-buttons">
-                            <button class="btn btn-secondary" onclick="resetOrder(${vendor.id})">초기화</button>
-                            <button class="btn btn-primary" onclick="copyOrder(${vendor.id})">주문서 복사</button>
-                        </div>
-                        <div id="summary-${vendor.id}" class="order-summary" style="display: none;"></div>
                     </div>
                 `;
             }).join('');
+        }
+
+        // 벤더 펼치기/접기
+        function toggleVendor(vendorId) {
+            const content = document.getElementById(`content-${vendorId}`);
+            const icon = document.getElementById(`icon-${vendorId}`);
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                icon.classList.remove('expanded');
+            } else {
+                content.classList.add('expanded');
+                icon.classList.add('expanded');
+            }
         }
 
         // 벤더 관리 렌더링
