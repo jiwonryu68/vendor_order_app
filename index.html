@@ -952,9 +952,11 @@
             if (content.classList.contains('expanded')) {
                 content.classList.remove('expanded');
                 icon.classList.remove('expanded');
+                expandedVendors.delete(vendorId);
             } else {
                 content.classList.add('expanded');
                 icon.classList.add('expanded');
+                expandedVendors.add(vendorId);
             }
         }
 
@@ -986,20 +988,31 @@
             `;
         }
 
+        // 펼쳐진 벤더 추적
+        let expandedVendors = new Set();
+
         // 수량 조절
         function increaseQty(vendorId, productIdx) {
             const vendor = vendors.find(v => v.id === vendorId);
             vendor.products[productIdx].quantity++;
             localStorage.setItem('vendors', JSON.stringify(vendors));
+            
+            // 현재 스크롤 위치 저장
+            const scrollPos = window.scrollY;
+            
             renderVendorsList();
-            // 펼쳐진 상태 유지
+            
+            // 스크롤 위치 복원 및 펼쳐진 상태 유지
             setTimeout(() => {
-                const content = document.getElementById(`content-${vendorId}`);
-                const icon = document.getElementById(`icon-${vendorId}`);
-                if (content && icon) {
-                    content.classList.add('expanded');
-                    icon.classList.add('expanded');
-                }
+                window.scrollTo(0, scrollPos);
+                expandedVendors.forEach(id => {
+                    const content = document.getElementById(`content-${id}`);
+                    const icon = document.getElementById(`icon-${id}`);
+                    if (content && icon) {
+                        content.classList.add('expanded');
+                        icon.classList.add('expanded');
+                    }
+                });
             }, 0);
         }
 
@@ -1008,15 +1021,23 @@
             if (vendor.products[productIdx].quantity > 0) {
                 vendor.products[productIdx].quantity--;
                 localStorage.setItem('vendors', JSON.stringify(vendors));
+                
+                // 현재 스크롤 위치 저장
+                const scrollPos = window.scrollY;
+                
                 renderVendorsList();
-                // 펼쳐진 상태 유지
+                
+                // 스크롤 위치 복원 및 펼쳐진 상태 유지
                 setTimeout(() => {
-                    const content = document.getElementById(`content-${vendorId}`);
-                    const icon = document.getElementById(`icon-${vendorId}`);
-                    if (content && icon) {
-                        content.classList.add('expanded');
-                        icon.classList.add('expanded');
-                    }
+                    window.scrollTo(0, scrollPos);
+                    expandedVendors.forEach(id => {
+                        const content = document.getElementById(`content-${id}`);
+                        const icon = document.getElementById(`icon-${id}`);
+                        if (content && icon) {
+                            content.classList.add('expanded');
+                            icon.classList.add('expanded');
+                        }
+                    });
                 }, 0);
             }
         }
@@ -1025,15 +1046,23 @@
             const vendor = vendors.find(v => v.id === vendorId);
             vendor.products[productIdx].quantity = Math.max(0, parseInt(value) || 0);
             localStorage.setItem('vendors', JSON.stringify(vendors));
+            
+            // 현재 스크롤 위치 저장
+            const scrollPos = window.scrollY;
+            
             renderVendorsList();
-            // 펼쳐진 상태 유지
+            
+            // 스크롤 위치 복원 및 펼쳐진 상태 유지
             setTimeout(() => {
-                const content = document.getElementById(`content-${vendorId}`);
-                const icon = document.getElementById(`icon-${vendorId}`);
-                if (content && icon) {
-                    content.classList.add('expanded');
-                    icon.classList.add('expanded');
-                }
+                window.scrollTo(0, scrollPos);
+                expandedVendors.forEach(id => {
+                    const content = document.getElementById(`content-${id}`);
+                    const icon = document.getElementById(`icon-${id}`);
+                    if (content && icon) {
+                        content.classList.add('expanded');
+                        icon.classList.add('expanded');
+                    }
+                });
             }, 0);
         }
 
@@ -1042,16 +1071,24 @@
             const vendor = vendors.find(v => v.id === vendorId);
             vendor.products.forEach(p => p.quantity = 0);
             localStorage.setItem('vendors', JSON.stringify(vendors));
+            
+            // 현재 스크롤 위치 저장
+            const scrollPos = window.scrollY;
+            
             renderVendorsList();
             showToast('주문이 초기화되었습니다');
-            // 펼쳐진 상태 유지
+            
+            // 스크롤 위치 복원 및 펼쳐진 상태 유지
             setTimeout(() => {
-                const content = document.getElementById(`content-${vendorId}`);
-                const icon = document.getElementById(`icon-${vendorId}`);
-                if (content && icon) {
-                    content.classList.add('expanded');
-                    icon.classList.add('expanded');
-                }
+                window.scrollTo(0, scrollPos);
+                expandedVendors.forEach(id => {
+                    const content = document.getElementById(`content-${id}`);
+                    const icon = document.getElementById(`icon-${id}`);
+                    if (content && icon) {
+                        content.classList.add('expanded');
+                        icon.classList.add('expanded');
+                    }
+                });
             }, 0);
         }
 
