@@ -204,6 +204,12 @@
             color: #333;
         }
 
+        .product-name-en {
+            font-size: 12px;
+            color: #999;
+            margin-top: 2px;
+        }
+
         .quantity-control {
             display: flex;
             align-items: center;
@@ -453,30 +459,6 @@
                     <input type="text" id="vendor-name" class="form-input" placeholder="예: 신선식품">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">배달 요일</label>
-                    <div class="day-selector" id="delivery-days">
-                        <button class="day-btn" data-day="0">일</button>
-                        <button class="day-btn" data-day="1">월</button>
-                        <button class="day-btn" data-day="2">화</button>
-                        <button class="day-btn" data-day="3">수</button>
-                        <button class="day-btn" data-day="4">목</button>
-                        <button class="day-btn" data-day="5">금</button>
-                        <button class="day-btn" data-day="6">토</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">주문 마감 시간 (배달일 기준)</label>
-                    <select id="deadline-time" class="form-input">
-                        <option value="1">배달 1일 전</option>
-                        <option value="2">배달 2일 전</option>
-                        <option value="3">배달 3일 전</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">마감 알림 시간</label>
-                    <input type="time" id="notification-time" class="form-input" value="09:00">
-                </div>
-                <div class="form-group">
                     <label class="form-label">상품 목록</label>
                     <div id="products-container"></div>
                     <button class="add-product-btn" onclick="addProductInput()">+ 상품 추가</button>
@@ -491,8 +473,301 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        let vendors = JSON.parse(localStorage.getItem('vendors') || '[]');
-        let selectedDays = new Set();
+        // 기본 벤더 데이터 (처음 사용시 자동으로 추가됨)
+        const defaultVendors = [
+            {
+                id: 1001,
+                name: "H mart",
+                products: [
+                    { nameKo: "파", nameEn: "scallion", quantity: 0 },
+                    { nameKo: "양파", nameEn: "onion", quantity: 0 },
+                    { nameKo: "할라피뇨", nameEn: "jalapeno pepper", quantity: 0 },
+                    { nameKo: "주키니", nameEn: "Green squash", quantity: 0 },
+                    { nameKo: "워터글래스", nameEn: "watercress", quantity: 0 },
+                    { nameKo: "콩나물", nameEn: "Soybean sprout", quantity: 0 },
+                    { nameKo: "부추", nameEn: "chinese chives", quantity: 0 },
+                    { nameKo: "하우스오이", nameEn: "kirby pickle", quantity: 0 },
+                    { nameKo: "스프링믹스", nameEn: "spring mix", quantity: 0 },
+                    { nameKo: "비트", nameEn: "beet loose", quantity: 0 },
+                    { nameKo: "감자", nameEn: "Idaho potato", quantity: 0 },
+                    { nameKo: "당근", nameEn: "loose carrot", quantity: 0 },
+                    { nameKo: "무우", nameEn: "Korean radish", quantity: 0 },
+                    { nameKo: "배추", nameEn: "napa cabbage", quantity: 0 },
+                    { nameKo: "대추", nameEn: "dried jujube", quantity: 0 },
+                    { nameKo: "물고비", nameEn: "zen mai mizuni", quantity: 0 },
+                    { nameKo: "마늘", nameEn: "peeled garlic", quantity: 0 },
+                    { nameKo: "마른표고버섯", nameEn: "dried shitake mushroom", quantity: 0 },
+                    { nameKo: "생강", nameEn: "ginger", quantity: 0 },
+                    { nameKo: "양배추", nameEn: "green cabbage", quantity: 0 },
+                    { nameKo: "차요테", nameEn: "chayote", quantity: 0 },
+                    { nameKo: "사과", nameEn: "apple", quantity: 0 },
+                    { nameKo: "배", nameEn: "singo pear", quantity: 0 },
+                    { nameKo: "해초샐러드", nameEn: "seaweed salad", quantity: 0 },
+                    { nameKo: "초록피망", nameEn: "green pepper", quantity: 0 },
+                    { nameKo: "굵은고춧가루", nameEn: "coarse red pepper powder", quantity: 0 },
+                    { nameKo: "고운고춧가루", nameEn: "fine red pepper powder", quantity: 0 },
+                    { nameKo: "고추장", nameEn: "Hot pepper paste", quantity: 0 },
+                    { nameKo: "국간장", nameEn: "soup soy sauce", quantity: 0 },
+                    { nameKo: "된장", nameEn: "soybean paste", quantity: 0 },
+                    { nameKo: "간장", nameEn: "soy sauce", quantity: 0 },
+                    { nameKo: "미국식초", nameEn: "vinegar", quantity: 0 },
+                    { nameKo: "사과식초", nameEn: "apple vinegar", quantity: 0 },
+                    { nameKo: "미림", nameEn: "mirim", quantity: 0 },
+                    { nameKo: "삼게피쉬소스", nameEn: "crab fish sauce", quantity: 0 },
+                    { nameKo: "소고기다시다", nameEn: "beef flavor seasoning", quantity: 0 },
+                    { nameKo: "조개다시다", nameEn: "clam flavor seasoning", quantity: 0 },
+                    { nameKo: "오일", nameEn: "soybean cooking oil", quantity: 0 },
+                    { nameKo: "참기름", nameEn: "sesame oil", quantity: 0 },
+                    { nameKo: "들기름", nameEn: "perilla oil", quantity: 0 },
+                    { nameKo: "모듬해물", nameEn: "seafood mix", quantity: 0 },
+                    { nameKo: "사각어묵", nameEn: "fishcake", quantity: 0 },
+                    { nameKo: "비엔나소시지", nameEn: "vienna sausage", quantity: 0 },
+                    { nameKo: "삼계탕", nameEn: "ginsang chicken", quantity: 0 },
+                    { nameKo: "비비고돼지만두", nameEn: "bibigo wang gyoza", quantity: 0 },
+                    { nameKo: "비비고김치만두", nameEn: "bibigo kimchi gyoza", quantity: 0 },
+                    { nameKo: "머리새우", nameEn: "shrimp head on", quantity: 0 },
+                    { nameKo: "겨자분", nameEn: "mustard powder", quantity: 0 },
+                    { nameKo: "짜장분말", nameEn: "black bean sauce powder", quantity: 0 },
+                    { nameKo: "신라면", nameEn: "shin ramen", quantity: 0 },
+                    { nameKo: "짜파게티", nameEn: "chapagetti", quantity: 0 },
+                    { nameKo: "불닭볶음면", nameEn: "buldak ramen", quantity: 0 },
+                    { nameKo: "벌크물엿", nameEn: "corn syrup", quantity: 0 },
+                    { nameKo: "벌크미원", nameEn: "ajinomoto", quantity: 0 },
+                    { nameKo: "밀가루", nameEn: "wheat flour", quantity: 0 },
+                    { nameKo: "강초", nameEn: "strong vinegar", quantity: 0 },
+                    { nameKo: "오뚜기카레", nameEn: "curry powder", quantity: 0 },
+                    { nameKo: "매실청", nameEn: "plum syrub", quantity: 0 },
+                    { nameKo: "뉴슈가", nameEn: "newsugar", quantity: 0 },
+                    { nameKo: "오이스터소스", nameEn: "oyster sauce", quantity: 0 },
+                    { nameKo: "캡사이신", nameEn: "capsaisin", quantity: 0 },
+                    { nameKo: "다시마", nameEn: "dried sea tangle", quantity: 0 },
+                    { nameKo: "떡국떡", nameEn: "slice rice cake", quantity: 0 },
+                    { nameKo: "감초", nameEn: "licorice", quantity: 0 },
+                    { nameKo: "멸치액젓", nameEn: "anchovy sauce", quantity: 0 },
+                    { nameKo: "감자전분", nameEn: "potato starch", quantity: 0 },
+                    { nameKo: "생굴", nameEn: "oyster meat", quantity: 0 },
+                    { nameKo: "맥아물엿", nameEn: "korean syrup", quantity: 0 },
+                    { nameKo: "혼다시", nameEn: "hondashi", quantity: 0 },
+                    { nameKo: "튀김가루", nameEn: "frying mix", quantity: 0 },
+                    { nameKo: "보리차", nameEn: "barley tea", quantity: 0 },
+                    { nameKo: "옥수수차", nameEn: "corn tea", quantity: 0 },
+                    { nameKo: "설탕", nameEn: "domino sugar", quantity: 0 },
+                    { nameKo: "미국소금", nameEn: "granulated salt", quantity: 0 },
+                    { nameKo: "단무지", nameEn: "pickled radish", quantity: 0 },
+                    { nameKo: "두부", nameEn: "tofu firm", quantity: 0 },
+                    { nameKo: "순두부", nameEn: "soft tofu", quantity: 0 },
+                    { nameKo: "계란", nameEn: "large egg", quantity: 0 },
+                    { nameKo: "고무장갑", nameEn: "rubber gloves", quantity: 0 },
+                    { nameKo: "목장갑", nameEn: "cotton gloves", quantity: 0 },
+                    { nameKo: "갈아만든배", nameEn: "pear drink", quantity: 0 },
+                    { nameKo: "비락식혜", nameEn: "rice punch", quantity: 0 },
+                    { nameKo: "밀키스", nameEn: "Milkis", quantity: 0 },
+                    { nameKo: "봉봉", nameEn: "Bongbong", quantity: 0 },
+                    { nameKo: "쌕쌕", nameEn: "Sacsac", quantity: 0 },
+                    { nameKo: "요구르트", nameEn: "yogurt drink", quantity: 0 },
+                    { nameKo: "통깨", nameEn: "sesame seed", quantity: 0 }
+                ]
+            },
+            {
+                id: 1002,
+                name: "Aju",
+                products: [
+                    { nameKo: "생칼국수", nameEn: "fresh noodle", quantity: 0 },
+                    { nameKo: "쌀", nameEn: "rice", quantity: 0 },
+                    { nameKo: "찹쌀", nameEn: "sweet race", quantity: 0 },
+                    { nameKo: "라면사리", nameEn: "ramen sari", quantity: 0 },
+                    { nameKo: "송학칡냉면", nameEn: "arrowroot noodle", quantity: 0 },
+                    { nameKo: "감자수제비", nameEn: "wheat flake with potato", quantity: 0 },
+                    { nameKo: "당면", nameEn: "starch noodle", quantity: 0 },
+                    { nameKo: "무청시래기", nameEn: "dried radish leaves", quantity: 0 },
+                    { nameKo: "통들깨", nameEn: "perilla seed", quantity: 0 },
+                    { nameKo: "새우젓", nameEn: "salted shrimp", quantity: 0 },
+                    { nameKo: "바지락", nameEn: "cooked clam", quantity: 0 },
+                    { nameKo: "한박피들깨", nameEn: "perilla seed peeled", quantity: 0 },
+                    { nameKo: "돌자반", nameEn: "dried seaweed", quantity: 0 },
+                    { nameKo: "밀떡볶이떡", nameEn: "wheat cake", quantity: 0 }
+                ]
+            },
+            {
+                id: 1003,
+                name: "Blue Star",
+                products: [
+                    { nameKo: "사골", nameEn: "beef shin bone", quantity: 0 },
+                    { nameKo: "돼지사골", nameEn: "pork femur bone", quantity: 0 },
+                    { nameKo: "소잡뼈", nameEn: "beef neck bone", quantity: 0 },
+                    { nameKo: "우족", nameEn: "Beef cow feet", quantity: 0 },
+                    { nameKo: "불고기", nameEn: "ribeye roll", quantity: 0 },
+                    { nameKo: "제육", nameEn: "pork butt sliced", quantity: 0 },
+                    { nameKo: "양지", nameEn: "Beef brisket", quantity: 0 },
+                    { nameKo: "척갈비", nameEn: "beef short rib 1.5\"", quantity: 0 },
+                    { nameKo: "소꼬리", nameEn: "beef ox tail", quantity: 0 },
+                    { nameKo: "스페어립", nameEn: "pork spare rib", quantity: 0 },
+                    { nameKo: "족발", nameEn: "pork feet hormel", quantity: 0 },
+                    { nameKo: "닭발", nameEn: "chicken feet", quantity: 0 },
+                    { nameKo: "치킨따이", nameEn: "chicken thigh", quantity: 0 },
+                    { nameKo: "치킨랙", nameEn: "chicken leg", quantity: 0 },
+                    { nameKo: "곱창", nameEn: "beef intestine Small", quantity: 0 },
+                    { nameKo: "대창", nameEn: "beef intestine Large", quantity: 0 },
+                    { nameKo: "막창", nameEn: "beef abomasum", quantity: 0 },
+                    { nameKo: "양", nameEn: "beef tripe honeycomb", quantity: 0 },
+                    { nameKo: "오소리", nameEn: "pork stomach", quantity: 0 },
+                    { nameKo: "선지", nameEn: "Pork blood", quantity: 0 },
+                    { nameKo: "케이싱", nameEn: "pork casing", quantity: 0 },
+                    { nameKo: "본레스벗", nameEn: "pork boneless butt", quantity: 0 },
+                    { nameKo: "스지", nameEn: "beef tendon", quantity: 0 },
+                    { nameKo: "LA갈비", nameEn: "beef short rib 0.4\"", quantity: 0 },
+                    { nameKo: "돼지등뼈", nameEn: "pork neck bone", quantity: 0 },
+                    { nameKo: "돼지간", nameEn: "pork liver", quantity: 0 },
+                    { nameKo: "수육삼겹", nameEn: "pork rib belly", quantity: 0 }
+                ]
+            },
+            {
+                id: 1004,
+                name: "그린푸드",
+                products: [
+                    { nameKo: "8oz 컨테이너", nameEn: "", quantity: 0 },
+                    { nameKo: "8oz 뚜껑", nameEn: "", quantity: 0 },
+                    { nameKo: "16oz 국통", nameEn: "", quantity: 0 },
+                    { nameKo: "32oz 국통", nameEn: "", quantity: 0 },
+                    { nameKo: "48oz 국통", nameEn: "", quantity: 0 },
+                    { nameKo: "hinged lid container pp99", nameEn: "", quantity: 0 },
+                    { nameKo: "hinged lid container p225", nameEn: "", quantity: 0 },
+                    { nameKo: "플라스틱 컨테이너 48oz", nameEn: "", quantity: 0 },
+                    { nameKo: "플라스틱 컨테이너 28oz", nameEn: "", quantity: 0 },
+                    { nameKo: "플라스틱 컨테이너 24oz", nameEn: "", quantity: 0 },
+                    { nameKo: "화장실 휴지 9 inch", nameEn: "", quantity: 0 },
+                    { nameKo: "브라운 롤페이퍼", nameEn: "", quantity: 0 },
+                    { nameKo: "디너냅킨 2ply", nameEn: "", quantity: 0 },
+                    { nameKo: "투고용 브라운백", nameEn: "", quantity: 0 },
+                    { nameKo: "플라스틱백 1/6", nameEn: "", quantity: 0 },
+                    { nameKo: "플라스틱백 1/8", nameEn: "", quantity: 0 },
+                    { nameKo: "투고숟가락", nameEn: "", quantity: 0 },
+                    { nameKo: "비닐랩 18 inch", nameEn: "", quantity: 0 },
+                    { nameKo: "비닐랩 12 inch", nameEn: "", quantity: 0 },
+                    { nameKo: "맙 버켓", nameEn: "", quantity: 0 },
+                    { nameKo: "맙 헤드", nameEn: "", quantity: 0 },
+                    { nameKo: "롤백", nameEn: "", quantity: 0 },
+                    { nameKo: "클리어김장봉투", nameEn: "", quantity: 0 },
+                    { nameKo: "맙 스틱", nameEn: "", quantity: 0 },
+                    { nameKo: "빗자루", nameEn: "", quantity: 0 },
+                    { nameKo: "쓰레받이", nameEn: "", quantity: 0 },
+                    { nameKo: "테이블세니타이저", nameEn: "", quantity: 0 },
+                    { nameKo: "1oz 컨테이너", nameEn: "", quantity: 0 },
+                    { nameKo: "2oz 컨테이너", nameEn: "", quantity: 0 },
+                    { nameKo: "4oz 컨테이너", nameEn: "", quantity: 0 },
+                    { nameKo: "1oz 뚜껑", nameEn: "", quantity: 0 },
+                    { nameKo: "2oz 뚜껑", nameEn: "", quantity: 0 },
+                    { nameKo: "4oz 뚜껑", nameEn: "", quantity: 0 },
+                    { nameKo: "고체연료", nameEn: "", quantity: 0 },
+                    { nameKo: "오더페이퍼", nameEn: "", quantity: 0 },
+                    { nameKo: "플라스틱 빨대", nameEn: "", quantity: 0 },
+                    { nameKo: "헤어망", nameEn: "", quantity: 0 },
+                    { nameKo: "쓰레기봉투 13갤런", nameEn: "", quantity: 0 },
+                    { nameKo: "파불로소 라벤더", nameEn: "", quantity: 0 },
+                    { nameKo: "윈덱스", nameEn: "", quantity: 0 },
+                    { nameKo: "물티슈", nameEn: "", quantity: 0 },
+                    { nameKo: "행주", nameEn: "", quantity: 0 },
+                    { nameKo: "클로록스", nameEn: "", quantity: 0 },
+                    { nameKo: "긴라이터", nameEn: "", quantity: 0 },
+                    { nameKo: "검은쓰레기봉지", nameEn: "", quantity: 0 },
+                    { nameKo: "쇠수세미", nameEn: "", quantity: 0 },
+                    { nameKo: "녹색수세미", nameEn: "", quantity: 0 },
+                    { nameKo: "디쉬솝", nameEn: "", quantity: 0 }
+                ]
+            },
+            {
+                id: 1005,
+                name: "레스토랑디폿",
+                products: [
+                    { nameKo: "홀스래디쉬", nameEn: "Horseradish", quantity: 0 },
+                    { nameKo: "메추리알", nameEn: "quail egg", quantity: 0 },
+                    { nameKo: "우유", nameEn: "Milk", quantity: 0 },
+                    { nameKo: "헤비크림", nameEn: "Heavy cream", quantity: 0 },
+                    { nameKo: "참치캔", nameEn: "canned tuna", quantity: 0 },
+                    { nameKo: "케찹", nameEn: "ketchup", quantity: 0 },
+                    { nameKo: "마요네즈", nameEn: "mayonaise", quantity: 0 },
+                    { nameKo: "캔콘", nameEn: "canned corn", quantity: 0 },
+                    { nameKo: "모짜렐라치즈", nameEn: "Mozzarella cheese", quantity: 0 },
+                    { nameKo: "오렌지주스", nameEn: "orange juice", quantity: 0 },
+                    { nameKo: "사과주스", nameEn: "apple juice", quantity: 0 },
+                    { nameKo: "포도주스", nameEn: "grape juice", quantity: 0 },
+                    { nameKo: "자몽주스", nameEn: "grapefruit juice", quantity: 0 },
+                    { nameKo: "파인애플주스", nameEn: "pineapple juice", quantity: 0 },
+                    { nameKo: "월계수", nameEn: "bay leaf", quantity: 0 },
+                    { nameKo: "후추", nameEn: "black pepper", quantity: 0 },
+                    { nameKo: "통후추", nameEn: "whole black pepper", quantity: 0 },
+                    { nameKo: "마늘가루", nameEn: "garlic powder", quantity: 0 },
+                    { nameKo: "양파가루", nameEn: "onion powder", quantity: 0 }
+                ]
+            },
+            {
+                id: 1006,
+                name: "스카이비어",
+                products: [
+                    { nameKo: "테라", nameEn: "", quantity: 0 }
+                ]
+            },
+            {
+                id: 1007,
+                name: "극동",
+                products: [
+                    { nameKo: "클라우드 550ml", nameEn: "", quantity: 0 },
+                    { nameKo: "아사히", nameEn: "", quantity: 0 },
+                    { nameKo: "쿨스라이트", nameEn: "", quantity: 0 },
+                    { nameKo: "콜라", nameEn: "", quantity: 0 },
+                    { nameKo: "다이어트콜라", nameEn: "", quantity: 0 },
+                    { nameKo: "제로콜라", nameEn: "", quantity: 0 },
+                    { nameKo: "스프라이트", nameEn: "", quantity: 0 },
+                    { nameKo: "진저에일", nameEn: "", quantity: 0 },
+                    { nameKo: "설중매", nameEn: "", quantity: 0 },
+                    { nameKo: "청하", nameEn: "", quantity: 0 },
+                    { nameKo: "복숭아소주", nameEn: "", quantity: 0 },
+                    { nameKo: "청포도소주", nameEn: "", quantity: 0 },
+                    { nameKo: "사과소주", nameEn: "", quantity: 0 },
+                    { nameKo: "새로살구", nameEn: "", quantity: 0 },
+                    { nameKo: "요거트소주", nameEn: "", quantity: 0 },
+                    { nameKo: "새로", nameEn: "", quantity: 0 },
+                    { nameKo: "처음처럼", nameEn: "", quantity: 0 }
+                ]
+            },
+            {
+                id: 1008,
+                name: "대선",
+                products: [
+                    { nameKo: "백세주", nameEn: "", quantity: 0 },
+                    { nameKo: "생막걸리", nameEn: "", quantity: 0 }
+                ]
+            },
+            {
+                id: 1009,
+                name: "참이슬 뉴욕",
+                products: [
+                    { nameKo: "참이슬 프레쉬", nameEn: "", quantity: 0 },
+                    { nameKo: "참이슬 오리지널", nameEn: "", quantity: 0 },
+                    { nameKo: "진로", nameEn: "", quantity: 0 },
+                    { nameKo: "자몽소주", nameEn: "", quantity: 0 }
+                ]
+            },
+            {
+                id: 1010,
+                name: "자이언트",
+                products: [
+                    { nameKo: "카스", nameEn: "", quantity: 0 },
+                    { nameKo: "복분자", nameEn: "", quantity: 0 }
+                ]
+            }
+        ];
+
+        // 로컬 스토리지에서 벤더 불러오기 (처음이면 기본 벤더 사용)
+        let vendors = JSON.parse(localStorage.getItem('vendors') || 'null');
+        
+        // 처음 사용하는 경우 기본 벤더 추가
+        if (vendors === null) {
+            vendors = [...defaultVendors];
+            localStorage.setItem('vendors', JSON.stringify(vendors));
+            localStorage.setItem('hasDefaultVendors', 'true');
+        }
+        
         let deferredPrompt;
 
         // PWA 설치
@@ -536,27 +811,14 @@
             }
         }
 
-        // 요일 선택
-        document.querySelectorAll('.day-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const day = this.dataset.day;
-                if (selectedDays.has(day)) {
-                    selectedDays.delete(day);
-                    this.classList.remove('selected');
-                } else {
-                    selectedDays.add(day);
-                    this.classList.add('selected');
-                }
-            });
-        });
-
         // 상품 입력 추가
         function addProductInput() {
             const container = document.getElementById('products-container');
             const div = document.createElement('div');
             div.className = 'product-input-container';
             div.innerHTML = `
-                <input type="text" class="form-input product-name-input" placeholder="상품명">
+                <input type="text" class="form-input product-name-input-ko" placeholder="한글명 (예: 양파)" style="flex: 1;">
+                <input type="text" class="form-input product-name-input-en" placeholder="영어명 (예: Onion)" style="flex: 1;">
                 <button class="remove-btn" onclick="this.parentElement.remove()">✕</button>
             `;
             container.appendChild(div);
@@ -570,21 +832,16 @@
         // 벤더 저장
         function saveVendor() {
             const name = document.getElementById('vendor-name').value.trim();
-            const deadlineDays = parseInt(document.getElementById('deadline-time').value);
-            const notificationTime = document.getElementById('notification-time').value;
             
-            const productInputs = document.querySelectorAll('.product-name-input');
-            const products = Array.from(productInputs)
-                .map(input => input.value.trim())
-                .filter(name => name !== '');
+            const productContainers = document.querySelectorAll('.product-input-container');
+            const products = Array.from(productContainers).map(container => {
+                const nameKo = container.querySelector('.product-name-input-ko').value.trim();
+                const nameEn = container.querySelector('.product-name-input-en').value.trim();
+                return { nameKo, nameEn };
+            }).filter(p => p.nameKo || p.nameEn);
 
             if (!name) {
                 showToast('벤더 이름을 입력해주세요');
-                return;
-            }
-
-            if (selectedDays.size === 0) {
-                showToast('배달 요일을 선택해주세요');
                 return;
             }
 
@@ -596,10 +853,11 @@
             const vendor = {
                 id: Date.now(),
                 name,
-                deliveryDays: Array.from(selectedDays).map(Number),
-                deadlineDays,
-                notificationTime,
-                products: products.map(p => ({ name: p, quantity: 0 }))
+                products: products.map(p => ({ 
+                    nameKo: p.nameKo, 
+                    nameEn: p.nameEn, 
+                    quantity: 0 
+                }))
             };
 
             vendors.push(vendor);
@@ -609,8 +867,6 @@
             
             // 폼 초기화
             document.getElementById('vendor-name').value = '';
-            selectedDays.clear();
-            document.querySelectorAll('.day-btn').forEach(btn => btn.classList.remove('selected'));
             document.getElementById('products-container').innerHTML = '';
             for (let i = 0; i < 3; i++) {
                 addProductInput();
@@ -646,9 +902,6 @@
             }
 
             container.innerHTML = vendors.map(vendor => {
-                const nextDelivery = getNextDeliveryDate(vendor.deliveryDays);
-                const deadline = getDeadlineInfo(nextDelivery, vendor.deadlineDays);
-                
                 return `
                     <div class="vendor-card">
                         <div class="vendor-header" onclick="toggleVendor(${vendor.id})">
@@ -657,20 +910,19 @@
                                 <div>
                                     <div class="vendor-name">${vendor.name}</div>
                                     <div class="vendor-info">
-                                        다음 배달: ${formatDate(nextDelivery)}<br>
-                                        주문 마감: ${formatDate(deadline.date)} ${vendor.notificationTime}
+                                        상품 ${vendor.products.length}개
                                     </div>
                                 </div>
-                            </div>
-                            <div class="deadline-badge ${deadline.safe ? 'safe' : ''}">
-                                ${deadline.daysLeft}일 남음
                             </div>
                         </div>
                         <div class="vendor-content" id="content-${vendor.id}">
                             <div class="product-list">
                                 ${vendor.products.map((product, idx) => `
                                     <div class="product-item">
-                                        <div class="product-name">${product.name}</div>
+                                        <div class="product-name">
+                                            ${product.nameKo || product.name || ''}
+                                            ${product.nameEn ? `<div class="product-name-en">${product.nameEn}</div>` : ''}
+                                        </div>
                                         <div class="quantity-control">
                                             <button class="qty-btn" onclick="event.stopPropagation(); decreaseQty(${vendor.id}, ${idx})">−</button>
                                             <input type="number" class="qty-input" value="${product.quantity}" 
@@ -714,8 +966,6 @@
                 container.innerHTML = '';
                 return;
             }
-
-            const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
             
             container.innerHTML = `
                 <h2 style="margin: 20px 0;">등록된 벤더</h2>
@@ -725,7 +975,6 @@
                             <div>
                                 <div class="vendor-name">${vendor.name}</div>
                                 <div class="vendor-info">
-                                    배달 요일: ${vendor.deliveryDays.map(d => dayNames[d]).join(', ')}<br>
                                     상품 수: ${vendor.products.length}개
                                 </div>
                             </div>
@@ -816,7 +1065,11 @@
                 return;
             }
 
-            const orderText = orderedProducts.map(p => `${p.name} ${p.quantity}`).join(', ');
+            // 항상 한글 이름으로 복사 (없으면 영어)
+            const orderText = orderedProducts.map(p => {
+                const productName = p.nameKo || p.name || p.nameEn;
+                return `${productName} ${p.quantity}`;
+            }).join(', ');
             
             // 클립보드에 복사
             if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -858,45 +1111,6 @@
             setTimeout(() => {
                 summary.style.display = 'none';
             }, 3000);
-        }
-
-        // 다음 배달일 계산
-        function getNextDeliveryDate(deliveryDays) {
-            const today = new Date();
-            const sortedDays = deliveryDays.sort((a, b) => a - b);
-            
-            for (let i = 0; i <= 7; i++) {
-                const checkDate = new Date(today);
-                checkDate.setDate(today.getDate() + i);
-                if (sortedDays.includes(checkDate.getDay())) {
-                    return checkDate;
-                }
-            }
-            return today;
-        }
-
-        // 마감일 정보
-        function getDeadlineInfo(deliveryDate, deadlineDays) {
-            const deadline = new Date(deliveryDate);
-            deadline.setDate(deadline.getDate() - deadlineDays);
-            
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            deadline.setHours(0, 0, 0, 0);
-            
-            const daysLeft = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
-            
-            return {
-                date: deadline,
-                daysLeft: Math.max(0, daysLeft),
-                safe: daysLeft > 1
-            };
-        }
-
-        // 날짜 포맷
-        function formatDate(date) {
-            const days = ['일', '월', '화', '수', '목', '금', '토'];
-            return `${date.getMonth() + 1}/${date.getDate()}(${days[date.getDay()]})`;
         }
 
         // 토스트 메시지
