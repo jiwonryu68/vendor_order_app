@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="주문관리">
+    <meta name="description" content="벤더별 주문을 쉽게 관리하는 앱">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <title>벤더 주문 앱</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding-bottom: 80px;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .install-banner {
+            background: rgba(255,255,255,0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .install-banner.show {
+            display: flex;
+        }
+
+        .install-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 10px 0;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .vendor-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .vendor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .vendor-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .vendor-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .deadline-badge {
+            background: #ff6b6b;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .deadline-badge.safe {
+            background: #51cf66;
+        }
+
+        .product-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .product-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .product-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-name {
+            flex: 1;
+            font-size: 15px;
+            color: #333;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .qty-btn {
+            width: 32px;
+            height: 32px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .qty-btn:active {
+            background: #667eea;
+            color: white;
+            transform: scale(0.95);
+        }
+
+        .qty-input {
+            width: 50px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 6px;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:active {
+            background: #5568d3;
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .btn-secondary:active {
+            background: #d0d0d0;
+            transform: scale(0.98);
+        }
+
+        .order-summary {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .settings-form {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .product-input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .product-input-container input {
+            flex: 1;
+        }
+
+        .remove-btn {
+            width: 40px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .add-product-btn {
+            width: 100%;
+            padding: 10px;
+            background: #51cf66;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateX(-50%) translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.show {
+            display: block;
+        }
+
+        .day-selector {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .day-btn {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .day-btn.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        select.form-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 35px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📦 벤더 주문 관리</h1>
+        <div class="install-banner" id="install-banner">
+            <span style="font-size: 14px;">📱 홈 화면에 추가하기</span>
+            <button class="install-btn" id="install-button">설치</button>
+        </div>
+        <div class="tab-container">
+            <button class="tab active" onclick="showTab('order')">주문하기</button>
+            <button class="tab" onclick="showTab('vendors')">벤더 관리</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <!-- 주문하기 섹션 -->
+        <div id="order-section" class="section active">
+            <div id="vendors-list"></div>
+        </div>
+
+        <!-- 벤더 관리 섹션 -->
+        <div id="vendors-section" class="section">
+            <div class="settings-form">
+                <h2 style="margin-bottom: 20px;">새 벤더 추가</h2>
+                <div class="form-group">
+                    <label class="form-label">벤더 이름</label>
+                    <input type="text" id="vendor-name" class="form-input" placeholder="예: 신선식품">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">배달 요일</label>
+                    <div class="day-selector" id="delivery-days">
+                        <button class="day-btn" data-day="0">일</button>
+                        <button class="day-btn" data-day="1">월</button>
+                        <button class="day-btn" data-day="2">화</button>
+                        <button class="day-btn" data-day="3">수</button>
+                        <button class="day-btn" data-day="4">목</button>
+                        <button class="day-btn" data-day="5">금</button>
+                        <button class="day-btn" data-day="6">토</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">주문 마감 시간 (배달일 기준)</label>
+                    <select id="deadline-time" class="form-input">
+                        <option value="1">배달 1일 전</option>
+                        <option value="2">배달 2일 전</option>
+                        <option value="3">배달 3일 전</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">마감 알림 시간</label>
+                    <input type="time" id="notification-time" class="form-input" value="09:00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">상품 목록</label>
+                    <div id="products-container"></div>
+                    <button class="add-product-btn" onclick="addProductInput()">+ 상품 추가</button>
+                </div>
+                <button class="btn btn-primary" onclick="saveVendor()">벤더 저장</button>
+            </div>
+
+            <div id="vendor-list-manage"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        let vendors = JSON.parse(localStorage.getItem('vendors') || '[]');
+        let selectedDays = new Set();
+        let deferredPrompt;
+
+        // PWA 설치
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('install-banner').classList.add('show');
+        });
+
+        document.getElementById('install-button').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    showToast('앱이 설치되었습니다!');
+                    document.getElementById('install-banner').classList.remove('show');
+                }
+                deferredPrompt = null;
+            }
+        });
+
+        // Service Worker 등록
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Service Worker 등록 완료'))
+                .catch(err => console.log('Service Worker 등록 실패:', err));
+        }
+
+        // 탭 전환
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + '-section').classList.add('active');
+            
+            if (tab === 'order') {
+                renderVendorsList();
+            } else {
+                renderVendorManage();
+            }
+        }
+
+        // 요일 선택
+        document.querySelectorAll('.day-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const day = this.dataset.day;
+                if (selectedDays.has(day)) {
+                    selectedDays.delete(day);
+                    this.classList.remove('selected');
+                } else {
+                    selectedDays.add(day);
+                    this.classList.add('selected');
+                }
+            });
+        });
+
+        // 상품 입력 추가
+        function addProductInput() {
+            const container = document.getElementById('products-container');
+            const div = document.createElement('div');
+            div.className = 'product-input-container';
+            div.innerHTML = `
+                <input type="text" class="form-input product-name-input" placeholder="상품명">
+                <button class="remove-btn" onclick="this.parentElement.remove()">✕</button>
+            `;
+            container.appendChild(div);
+        }
+
+        // 초기 상품 입력 3개 추가
+        for (let i = 0; i < 3; i++) {
+            addProductInput();
+        }
+
+        // 벤더 저장
+        function saveVendor() {
+            const name = document.getElementById('vendor-name').value.trim();
+            const deadlineDays = parseInt(document.getElementById('deadline-time').value);
+            const notificationTime = document.getElementById('notification-time').value;
+            
+            const productInputs = document.querySelectorAll('.product-name-input');
+            const products = Array.from(productInputs)
+                .map(input => input.value.trim())
+                .filter(name => name !== '');
+
+            if (!name) {
+                showToast('벤더 이름을 입력해주세요');
+                return;
+            }
+
+            if (selectedDays.size === 0) {
+                showToast('배달 요일을 선택해주세요');
+                return;
+            }
+
+            if (products.length === 0) {
+                showToast('최소 1개 이상의 상품을 입력해주세요');
+                return;
+            }
+
+            const vendor = {
+                id: Date.now(),
+                name,
+                deliveryDays: Array.from(selectedDays).map(Number),
+                deadlineDays,
+                notificationTime,
+                products: products.map(p => ({ name: p, quantity: 0 }))
+            };
+
+            vendors.push(vendor);
+            localStorage.setItem('vendors', JSON.stringify(vendors));
+
+            showToast('벤더가 저장되었습니다');
+            
+            // 폼 초기화
+            document.getElementById('vendor-name').value = '';
+            selectedDays.clear();
+            document.querySelectorAll('.day-btn').forEach(btn => btn.classList.remove('selected'));
+            document.getElementById('products-container').innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                addProductInput();
+            }
+
+            renderVendorManage();
+        }
+
+        // 벤더 삭제
+        function deleteVendor(id) {
+            if (confirm('이 벤더를 삭제하시겠습니까?')) {
+                vendors = vendors.filter(v => v.id !== id);
+                localStorage.setItem('vendors', JSON.stringify(vendors));
+                showToast('벤더가 삭제되었습니다');
+                renderVendorManage();
+                renderVendorsList();
+            }
+        }
+
+        // 주문 리스트 렌더링
+        function renderVendorsList() {
+            const container = document.getElementById('vendors-list');
+            
+            if (vendors.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>등록된 벤더가 없습니다</p>
+                        <p style="font-size: 14px; margin-top: 10px;">벤더 관리 탭에서 벤더를 추가해주세요</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = vendors.map(vendor => {
+                const nextDelivery = getNextDeliveryDate(vendor.deliveryDays);
+                const deadline = getDeadlineInfo(nextDelivery, vendor.deadlineDays);
+                
+                return `
+                    <div class="vendor-card">
+                        <div class="vendor-header">
+                            <div>
+                                <div class="vendor-name">${vendor.name}</div>
+                                <div class="vendor-info">
+                                    다음 배달: ${formatDate(nextDelivery)}<br>
+                                    주문 마감: ${formatDate(deadline.date)} ${vendor.notificationTime}
+                                </div>
+                            </div>
+                            <div class="deadline-badge ${deadline.safe ? 'safe' : ''}">
+                                ${deadline.daysLeft}일 남음
+                            </div>
+                        </div>
+                        <div class="product-list">
+                            ${vendor.products.map((product, idx) => `
+                                <div class="product-item">
+                                    <div class="product-name">${product.name}</div>
+                                    <div class="quantity-control">
+                                        <button class="qty-btn" onclick="decreaseQty(${vendor.id}, ${idx})">−</button>
+                                        <input type="number" class="qty-input" value="${product.quantity}" 
+                                               onchange="updateQty(${vendor.id}, ${idx}, this.value)" min="0">
+                                        <button class="qty-btn" onclick="increaseQty(${vendor.id}, ${idx})">+</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-secondary" onclick="resetOrder(${vendor.id})">초기화</button>
+                            <button class="btn btn-primary" onclick="copyOrder(${vendor.id})">주문서 복사</button>
+                        </div>
+                        <div id="summary-${vendor.id}" class="order-summary" style="display: none;"></div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 벤더 관리 렌더링
+        function renderVendorManage() {
+            const container = document.getElementById('vendor-list-manage');
+            
+            if (vendors.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+            
+            container.innerHTML = `
+                <h2 style="margin: 20px 0;">등록된 벤더</h2>
+                ${vendors.map(vendor => `
+                    <div class="vendor-card">
+                        <div class="vendor-header">
+                            <div>
+                                <div class="vendor-name">${vendor.name}</div>
+                                <div class="vendor-info">
+                                    배달 요일: ${vendor.deliveryDays.map(d => dayNames[d]).join(', ')}<br>
+                                    상품 수: ${vendor.products.length}개
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary" style="flex: 0 0 auto; padding: 8px 16px;" 
+                                    onclick="deleteVendor(${vendor.id})">삭제</button>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        // 수량 조절
+        function increaseQty(vendorId, productIdx) {
+            const vendor = vendors.find(v => v.id === vendorId);
+            vendor.products[productIdx].quantity++;
+            localStorage.setItem('vendors', JSON.stringify(vendors));
+            renderVendorsList();
+        }
+
+        function decreaseQty(vendorId, productIdx) {
+            const vendor = vendors.find(v => v.id === vendorId);
+            if (vendor.products[productIdx].quantity > 0) {
+                vendor.products[productIdx].quantity--;
+                localStorage.setItem('vendors', JSON.stringify(vendors));
+                renderVendorsList();
+            }
+        }
+
+        function updateQty(vendorId, productIdx, value) {
+            const vendor = vendors.find(v => v.id === vendorId);
+            vendor.products[productIdx].quantity = Math.max(0, parseInt(value) || 0);
+            localStorage.setItem('vendors', JSON.stringify(vendors));
+            renderVendorsList();
+        }
+
+        // 주문 초기화
+        function resetOrder(vendorId) {
+            const vendor = vendors.find(v => v.id === vendorId);
+            vendor.products.forEach(p => p.quantity = 0);
+            localStorage.setItem('vendors', JSON.stringify(vendors));
+            renderVendorsList();
+            showToast('주문이 초기화되었습니다');
+        }
+
+        // 주문서 복사
+        function copyOrder(vendorId) {
+            const vendor = vendors.find(v => v.id === vendorId);
+            const orderedProducts = vendor.products.filter(p => p.quantity > 0);
+            
+            if (orderedProducts.length === 0) {
+                showToast('주문할 상품이 없습니다');
+                return;
+            }
+
+            const orderText = orderedProducts.map(p => `${p.name} ${p.quantity}`).join(', ');
+            
+            // 클립보드에 복사
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(orderText).then(() => {
+                    showToast('주문서가 복사되었습니다!');
+                    showSummary(vendorId, orderText);
+                }).catch(() => {
+                    fallbackCopy(orderText);
+                    showToast('주문서가 복사되었습니다!');
+                    showSummary(vendorId, orderText);
+                });
+            } else {
+                fallbackCopy(orderText);
+                showToast('주문서가 복사되었습니다!');
+                showSummary(vendorId, orderText);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+            } catch (err) {
+                console.error('복사 실패:', err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function showSummary(vendorId, orderText) {
+            const summary = document.getElementById(`summary-${vendorId}`);
+            summary.textContent = orderText;
+            summary.style.display = 'block';
+            
+            setTimeout(() => {
+                summary.style.display = 'none';
+            }, 3000);
+        }
+
+        // 다음 배달일 계산
+        function getNextDeliveryDate(deliveryDays) {
+            const today = new Date();
+            const sortedDays = deliveryDays.sort((a, b) => a - b);
+            
+            for (let i = 0; i <= 7; i++) {
+                const checkDate = new Date(today);
+                checkDate.setDate(today.getDate() + i);
+                if (sortedDays.includes(checkDate.getDay())) {
+                    return checkDate;
+                }
+            }
+            return today;
+        }
+
+        // 마감일 정보
+        function getDeadlineInfo(deliveryDate, deadlineDays) {
+            const deadline = new Date(deliveryDate);
+            deadline.setDate(deadline.getDate() - deadlineDays);
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            deadline.setHours(0, 0, 0, 0);
+            
+            const daysLeft = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+            
+            return {
+                date: deadline,
+                daysLeft: Math.max(0, daysLeft),
+                safe: daysLeft > 1
+            };
+        }
+
+        // 날짜 포맷
+        function formatDate(date) {
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            return `${date.getMonth() + 1}/${date.getDate()}(${days[date.getDay()]})`;
+        }
+
+        // 토스트 메시지
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // 초기 렌더링
+        renderVendorsList();
+    </script>
+</body>
+</html>
