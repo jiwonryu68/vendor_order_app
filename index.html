@@ -991,29 +991,20 @@
         // 펼쳐진 벤더 추적
         let expandedVendors = new Set();
 
-        // 수량 조절
+        // 수량 조절 - DOM 직접 업데이트 (리렌더링 없음)
         function increaseQty(vendorId, productIdx) {
             const vendor = vendors.find(v => v.id === vendorId);
             vendor.products[productIdx].quantity++;
             localStorage.setItem('vendors', JSON.stringify(vendors));
             
-            // 현재 스크롤 위치 저장
-            const scrollPos = window.scrollY;
-            
-            renderVendorsList();
-            
-            // 스크롤 위치 복원 및 펼쳐진 상태 유지
-            setTimeout(() => {
-                window.scrollTo(0, scrollPos);
-                expandedVendors.forEach(id => {
-                    const content = document.getElementById(`content-${id}`);
-                    const icon = document.getElementById(`icon-${id}`);
-                    if (content && icon) {
-                        content.classList.add('expanded');
-                        icon.classList.add('expanded');
-                    }
-                });
-            }, 0);
+            // DOM에서 해당 input만 찾아서 업데이트
+            const vendorCard = document.querySelector(`[onclick="toggleVendor(${vendorId})"]`)?.closest('.vendor-card');
+            if (vendorCard) {
+                const inputs = vendorCard.querySelectorAll('.qty-input');
+                if (inputs[productIdx]) {
+                    inputs[productIdx].value = vendor.products[productIdx].quantity;
+                }
+            }
         }
 
         function decreaseQty(vendorId, productIdx) {
@@ -1022,23 +1013,14 @@
                 vendor.products[productIdx].quantity--;
                 localStorage.setItem('vendors', JSON.stringify(vendors));
                 
-                // 현재 스크롤 위치 저장
-                const scrollPos = window.scrollY;
-                
-                renderVendorsList();
-                
-                // 스크롤 위치 복원 및 펼쳐진 상태 유지
-                setTimeout(() => {
-                    window.scrollTo(0, scrollPos);
-                    expandedVendors.forEach(id => {
-                        const content = document.getElementById(`content-${id}`);
-                        const icon = document.getElementById(`icon-${id}`);
-                        if (content && icon) {
-                            content.classList.add('expanded');
-                            icon.classList.add('expanded');
-                        }
-                    });
-                }, 0);
+                // DOM에서 해당 input만 찾아서 업데이트
+                const vendorCard = document.querySelector(`[onclick="toggleVendor(${vendorId})"]`)?.closest('.vendor-card');
+                if (vendorCard) {
+                    const inputs = vendorCard.querySelectorAll('.qty-input');
+                    if (inputs[productIdx]) {
+                        inputs[productIdx].value = vendor.products[productIdx].quantity;
+                    }
+                }
             }
         }
 
@@ -1046,24 +1028,6 @@
             const vendor = vendors.find(v => v.id === vendorId);
             vendor.products[productIdx].quantity = Math.max(0, parseInt(value) || 0);
             localStorage.setItem('vendors', JSON.stringify(vendors));
-            
-            // 현재 스크롤 위치 저장
-            const scrollPos = window.scrollY;
-            
-            renderVendorsList();
-            
-            // 스크롤 위치 복원 및 펼쳐진 상태 유지
-            setTimeout(() => {
-                window.scrollTo(0, scrollPos);
-                expandedVendors.forEach(id => {
-                    const content = document.getElementById(`content-${id}`);
-                    const icon = document.getElementById(`icon-${id}`);
-                    if (content && icon) {
-                        content.classList.add('expanded');
-                        icon.classList.add('expanded');
-                    }
-                });
-            }, 0);
         }
 
         // 주문 초기화
@@ -1072,24 +1036,16 @@
             vendor.products.forEach(p => p.quantity = 0);
             localStorage.setItem('vendors', JSON.stringify(vendors));
             
-            // 현재 스크롤 위치 저장
-            const scrollPos = window.scrollY;
-            
-            renderVendorsList();
-            showToast('주문이 초기화되었습니다');
-            
-            // 스크롤 위치 복원 및 펼쳐진 상태 유지
-            setTimeout(() => {
-                window.scrollTo(0, scrollPos);
-                expandedVendors.forEach(id => {
-                    const content = document.getElementById(`content-${id}`);
-                    const icon = document.getElementById(`icon-${id}`);
-                    if (content && icon) {
-                        content.classList.add('expanded');
-                        icon.classList.add('expanded');
-                    }
+            // DOM에서 해당 벤더의 모든 input 찾아서 0으로 업데이트
+            const vendorCard = document.querySelector(`[onclick="toggleVendor(${vendorId})"]`)?.closest('.vendor-card');
+            if (vendorCard) {
+                const inputs = vendorCard.querySelectorAll('.qty-input');
+                inputs.forEach(input => {
+                    input.value = 0;
                 });
-            }, 0);
+            }
+            
+            showToast('주문이 초기화되었습니다');
         }
 
         // 주문서 복사
